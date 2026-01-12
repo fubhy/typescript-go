@@ -1,0 +1,67 @@
+//// [tests/cases/compiler/declarationEmitExportValueSymbolWithTsIgnore.ts] ////
+
+=== symbols.ts ===
+// Defines a unique symbol that will be used in type hierarchies
+export const MySymbol: unique symbol = Symbol.for("MySymbol");
+>MySymbol : Symbol(MySymbol, Decl(symbols.ts, 1, 12), Decl(symbols.ts, 1, 62))
+>Symbol.for : Symbol(SymbolConstructor.for, Decl(lib.es2015.symbol.d.ts, --, --))
+>Symbol : Symbol(Symbol, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.symbol.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
+>for : Symbol(SymbolConstructor.for, Decl(lib.es2015.symbol.d.ts, --, --))
+
+export type MySymbol = typeof MySymbol;
+>MySymbol : Symbol(MySymbol, Decl(symbols.ts, 1, 12), Decl(symbols.ts, 1, 62))
+>MySymbol : Symbol(MySymbol, Decl(symbols.ts, 1, 12), Decl(symbols.ts, 1, 62))
+
+=== inspectable.ts ===
+import { MySymbol } from "./symbols.js";
+>MySymbol : Symbol(MySymbol, Decl(inspectable.ts, 0, 8))
+
+// Interface that uses MySymbol as a computed property key
+export interface Inspectable {
+>Inspectable : Symbol(Inspectable, Decl(inspectable.ts, 0, 40))
+
+    [MySymbol]: () => string;
+>[MySymbol] : Symbol(Inspectable[MySymbol], Decl(inspectable.ts, 3, 30))
+>MySymbol : Symbol(MySymbol, Decl(inspectable.ts, 0, 8))
+}
+
+=== base.ts ===
+import { MySymbol } from "./symbols.js";
+>MySymbol : Symbol(MySymbol, Decl(base.ts, 0, 8))
+
+import { Inspectable } from "./inspectable.js";
+>Inspectable : Symbol(Inspectable, Decl(base.ts, 1, 8))
+
+// Base class that implements Inspectable
+export class Base implements Inspectable {
+>Base : Symbol(Base, Decl(base.ts, 1, 47))
+>Inspectable : Symbol(Inspectable, Decl(base.ts, 1, 8))
+
+    [MySymbol](): string {
+>[MySymbol] : Symbol(Base[MySymbol], Decl(base.ts, 4, 42))
+>MySymbol : Symbol(MySymbol, Decl(base.ts, 0, 8))
+
+        return "inspectable";
+    }
+}
+
+=== service.ts ===
+// @ts-ignore Import needed for type visibility but appears unused
+import { MySymbol } from "./symbols.js";
+>MySymbol : Symbol(MySymbol, Decl(service.ts, 1, 8))
+
+import { Base } from "./base.js";
+>Base : Symbol(Base, Decl(service.ts, 2, 8))
+
+// The @ts-ignore on the import should not affect symbol accessibility for declaration emit
+export class Service extends Base {
+>Service : Symbol(Service, Decl(service.ts, 2, 33))
+>Base : Symbol(Base, Decl(service.ts, 2, 8))
+
+    doSomething(): string {
+>doSomething : Symbol(Service.doSomething, Decl(service.ts, 5, 35))
+
+        return "hello";
+    }
+}
+

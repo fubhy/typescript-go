@@ -1,0 +1,68 @@
+//// [tests/cases/compiler/declarationEmitExportValueSymbolWithTsIgnore.ts] ////
+
+=== symbols.ts ===
+// Defines a unique symbol that will be used in type hierarchies
+export const MySymbol: unique symbol = Symbol.for("MySymbol");
+>MySymbol : unique symbol
+>Symbol.for("MySymbol") : unique symbol
+>Symbol.for : (key: string) => symbol
+>Symbol : SymbolConstructor
+>for : (key: string) => symbol
+>"MySymbol" : "MySymbol"
+
+export type MySymbol = typeof MySymbol;
+>MySymbol : unique symbol
+>MySymbol : unique symbol
+
+=== inspectable.ts ===
+import { MySymbol } from "./symbols.js";
+>MySymbol : unique symbol
+
+// Interface that uses MySymbol as a computed property key
+export interface Inspectable {
+    [MySymbol]: () => string;
+>[MySymbol] : () => string
+>MySymbol : unique symbol
+}
+
+=== base.ts ===
+import { MySymbol } from "./symbols.js";
+>MySymbol : unique symbol
+
+import { Inspectable } from "./inspectable.js";
+>Inspectable : any
+
+// Base class that implements Inspectable
+export class Base implements Inspectable {
+>Base : Base
+
+    [MySymbol](): string {
+>[MySymbol] : () => string
+>MySymbol : unique symbol
+
+        return "inspectable";
+>"inspectable" : "inspectable"
+    }
+}
+
+=== service.ts ===
+// @ts-ignore Import needed for type visibility but appears unused
+import { MySymbol } from "./symbols.js";
+>MySymbol : unique symbol
+
+import { Base } from "./base.js";
+>Base : typeof Base
+
+// The @ts-ignore on the import should not affect symbol accessibility for declaration emit
+export class Service extends Base {
+>Service : Service
+>Base : Base
+
+    doSomething(): string {
+>doSomething : () => string
+
+        return "hello";
+>"hello" : "hello"
+    }
+}
+

@@ -577,11 +577,20 @@ func (ch *Checker) isAccessible(
 		likeSymbols = true
 	}
 	symbol := ch.getMergedSymbol(ctx.symbol)
-	if symbol == ch.getMergedSymbol(resolvedAliasSymbol) {
+	mergedResolved := ch.getMergedSymbol(resolvedAliasSymbol)
+	if symbol == mergedResolved {
 		likeSymbols = true
 	}
-	if symbol == ch.getMergedSymbol(symbolFromSymbolTable) {
+	mergedFromTable := ch.getMergedSymbol(symbolFromSymbolTable)
+	if symbol == mergedFromTable {
 		likeSymbols = true
+	}
+	// If the symbol has ExportValue flag and ExportSymbol, also check against the ExportSymbol
+	if !likeSymbols && ctx.symbol != nil && ctx.symbol.Flags&ast.SymbolFlagsExportValue != 0 && ctx.symbol.ExportSymbol != nil {
+		exportSymbol := ch.getMergedSymbol(ctx.symbol.ExportSymbol)
+		if exportSymbol == mergedResolved || exportSymbol == mergedFromTable {
+			likeSymbols = true
+		}
 	}
 	if !likeSymbols {
 		return false
