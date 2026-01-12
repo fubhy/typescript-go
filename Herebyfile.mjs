@@ -63,6 +63,7 @@ const { values: rawOptions } = parseArgs({
 
         setPrerelease: { type: "string" },
         forRelease: { type: "boolean" },
+        allPlatforms: { type: "boolean" },
 
         race: { type: "boolean", default: parseEnvBoolean("RACE") },
         noembed: { type: "boolean", default: parseEnvBoolean("NOEMBED") },
@@ -994,7 +995,7 @@ const nativePreviewPlatforms = memoize(() => {
         // Wasm?
     ];
 
-    if (!options.forRelease) {
+    if (!options.forRelease && !options.allPlatforms) {
         supportedPlatforms = supportedPlatforms.filter(([os, arch]) => os === process.platform && arch === process.arch);
         assert.equal(supportedPlatforms.length, 1, "No supported platforms found");
     }

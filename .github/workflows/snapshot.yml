@@ -1,0 +1,57 @@
+name: Snapshot
+
+on:
+  push:
+    branches:
+      - effect-release
+  pull_request:
+    branches:
+      - effect-release
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+        with:
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+          dotnet: false
+
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: 'lts/*'
+
+      - uses: dtolnay/rust-toolchain@fcf085fcb4b4b8f63f96906cd713eb52181b5ea4 # stable
+
+      - uses: ./.github/actions/setup-go
+
+      - run: npm ci
+
+      - name: Build native-preview packages (all platforms)
+        run: npx hereby native-preview:build-packages --allPlatforms
+        env:
+          CGO_ENABLED: '0'
+
+      - name: List built packages
+        run: |
+          ls -la built/npm/
+          for dir in built/npm/*/; do
+            echo "=== $dir ==="
+            cat "$dir/package.json" | head -25
+          done
+
+      - name: Publish with pkg.pr.new
+        run: npx pkg-pr-new publish --comment=off ./built/npm/*
